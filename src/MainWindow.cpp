@@ -22,91 +22,172 @@
  */
 
 #include "MainWindow.hpp"
+#include "AddNodesWindow.hpp"
+#include "ModelColumns.hpp"
 #include "Exceptions.hpp"
 
 #include <gtkmm.h>
 #include <glibmm.h>
 
+#include <iostream>
+#include <sstream>
+#include <iomanip>
+
 MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder)
-    : Window(cobject), builder(refBuilder), notebook(0), treeView(0) {
-    builder->get_widget("notebook1", notebook);
+    : Window(cobject), builder(refBuilder)
+{
+    // Pobierz podstawowe widgety z pliku Glade
     builder->get_widget("dataTable", treeView);
-    builder->get_widget("quitButton", quitButton);
-    dataBase = RefPtr<ListStore>::cast_static(refBuilder->get_object("dataBase"));
+    if (!builder)
+        throw LoadWidgetError("treeView");
     
-    if (notebook && treeView && dataBase && quitButton) {
-        this->set_default_size(640, 480);
+    builder->get_widget("quitButton", quitButton);
+    if (!quitButton)
+        throw LoadWidgetError("quitButton");
+        
+    builder->get_widget("addNodesButton", addNodesButton);
+    if (!builder)
+        throw LoadWidgetError("addNodesButton");
+        
+    builder->get_widget("removeAllNodes", removeAllNodesButton);
+    if (!builder)
+        throw LoadWidgetError("removeAllNodesButton");
+        
+    builder->get_widget("statusBar", statusBar);
+    if (!builder)
+        throw LoadWidgetError("statusBar");
+        
+    dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
+    if (!builder)
+        throw LoadWidgetError("dataBase");
 
-        //TreeModel::Row row = *(dataBase->append());
-        //row.set_value(0, ustring("gtk-about"));
-        //row.set_value(0, ustring("5.5"));
-        //row.set_value(1, ustring("34.798"));
-        //row.set_value(2, ustring("Row generated at run-time!"));
+    // Przygotuj się do przechwytywania sygnału zaznaczenia wiersza
+    refTreeSelection = treeView->get_selection();
 
-        CellRendererText *rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(0));
-        rend->signal_edited().connect(
-            sigc::mem_fun(*this, &MainWindow::on_node_edited)
-        );
+    // Pobierz dodatkowe okienka
+    builder->get_widget_derived("addNodesWindow", addNodesWindow);      // Okno dodawania węzłów interpolacji
 
-        quitButton->signal_clicked().connect(
-            sigc::mem_fun(*this, &MainWindow::on_button_quit)
-        );
+    // Jeśli wszystko poszło OK
+    set_default_size(640, 480);
 
-        this->show();
-    } else {
-        throw AppSetupError("Cannot get all needed widgets from .glade file!");
-    }
+    CellRendererText *rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(1));
+    rend->signal_edited().connect(
+        sigc::mem_fun(*this, &MainWindow::onNodeEdited));
+
+    quitButton->signal_clicked().connect(
+        sigc::mem_fun(*this, &MainWindow::onQuitClick));
+
+    addNodesButton->signal_clicked().connect(
+        sigc::mem_fun(*this, &MainWindow::onAddNodesButtonClick));
+
+    removeAllNodesButton->signal_clicked().connect(
+        sigc::mem_fun(*this, &MainWindow::onRemoveAllNodesButtonClick));
+
+    addNodesWindow->getConfirmButton().signal_clicked().connect(
+        sigc::mem_fun(*this, &MainWindow::onAddNodesWindowConfirmClick));
+
+    refTreeSelection->signal_changed().connect(
+        sigc::mem_fun(*this, &MainWindow::onNodeSelect));
+
+    show();
 }
 
 MainWindow::~MainWindow() {
-    delete notebook;
+    delete statusBar;
     delete treeView;
+    delete quitButton;
+    delete removeAllNodesButton;
+    delete addNodesButton;
+    delete addNodesWindow;
+
+    cout << "MainWindow destructor end\n";
 }
 
-void MainWindow::on_node_edited(const ustring &pathString, const ustring &newText) {
-    Gtk::TreePath path(pathString);
+void MainWindow::onNodeEdited(const ustring &pathString, const ustring &newText) {
+    TreePath path(pathString);
 
-    long double newValue = strtold(newText.c_str(), nullptr);
-    if (newValue > 10.0f) {
-        //Get the row from the path:
-        Gtk::TreeModel::iterator iter = dataBase->get_iter(path);
+    try {
+        // Próba konwersji wpisanego tekstu na liczbę
+        long double newValue = stold(newText.raw());
+
+        // Czy węzeł jest unikalny?
+        if (!isNodeUnique(newText))
+            statusBar->set_label("Podany węzeł już istnieje w bieżącej siatce!\n");
+
+        // Uzyskanie iteratora ze ścieżki path
+        TreeModel::iterator iter = dataBase->get_iter(path);
         if (iter) {
             Gtk::TreeModel::Row row = *iter;
 
-            //Put the new value in the model:
-            row.set_value(0, newText);
+            // Wszystko w porządku - zmień wartość w wierszu
+            row[modelColumns.node] = newText;
+
+            // Uaktualnij status bar
+            onNodeSelect();
         }
+    } catch (invalid_argument const& e) {
+        statusBar->set_label("Niepoprawna wartość - brak możliwości konwersji do long double!");
+    } catch (out_of_range const& e) {
+        statusBar->set_label("Wpisano wartość spoza zakresu liczby typu long double!");
     }
-
-    //Convert the inputed text to an integer, as needed by our model column:
-    //~ char *pchEnd = 0;
-    //~ int new_value = strtol(new_text.c_str(), &pchEnd, 10);
-
-    //~ if (new_value > 10) {
-        //~ //Prevent entry of numbers higher than 10.
-//~ 
-        //~ //Tell the user:
-        //~ Gtk::MessageDialog dialog(*this,
-                //~ "The number must be less than 10. Please try again.",
-                //~ false, Gtk::MESSAGE_ERROR);
-        //~ dialog.run();
-//~ 
-        //~ //Start editing again, with the bad text, so that the user can correct it.
-        //~ //A real application should probably allow the user to revert to the
-        //~ //previous text.
-//~ 
-        //~ //Set the text to be used in the start_editing signal handler:
-        //~ m_invalid_text_for_retry = new_text;
-        //~ m_validate_retry = true;
-//~ 
-        //~ //Start editing again:
-        //~ m_TreeView.set_cursor(path, m_treeviewcolumn_validated,
-                //~ m_cellrenderer_validated, true /* start_editing */);
-    //~ }
-    //~ else
-    //~ {
 }
 
-void MainWindow::on_button_quit() {
+void MainWindow::onNodeSelect() {
+    // Pobierz zaznaczony wiersz
+    auto row = *(refTreeSelection->get_selected());
+    
+    if (!row)                           // Jeśli nie ma zaznaczonego wiersza...
+        return;                         // to nie mamy co robić!
+
+    // Jakie wartości zmiennopozycyjne kryją się w poszczególnych komórkach?
+    long double node  = stold(row.get_value(modelColumns.node ).raw()),
+                value = stold(row.get_value(modelColumns.value).raw());
+    ostringstream S;
+    S << "x = " << fixed << setprecision(25) << node << "\t\tf(x) = " << value;
+
+    // Uaktualnienie status bar
+    statusBar->set_label(ustring(S.str()));
+}
+
+void MainWindow::onAddNodesButtonClick() {
+    addNodesWindow->show();
+    addNodesWindow->present();
+}
+
+void MainWindow::onRemoveAllNodesButtonClick() {
+    refTreeSelection->unselect_all();
+    dataBase->clear();
+    nRecords = 0;
+}
+
+void MainWindow::onAddNodesWindowConfirmClick() {
+    TreeModel::Row row;
+    long double startValue = addNodesWindow->getStartValue(), step = addNodesWindow->getStep();
+    int addedRows = 0;
+
+    for (int i = 0, n = addNodesWindow->getnNodes(); i < n; ++i) {
+        auto value = ustring(to_string(startValue + i*step));
+
+        if (!isNodeUnique(value))
+            continue;
+        
+        row = *(dataBase->append());
+        row[modelColumns.id   ] = guint(nRecords + addedRows);
+        row[modelColumns.node ] = value;
+        row[modelColumns.value] = ustring("0.0");
+
+        ++addedRows;
+    }
+    nRecords += addedRows;
+}
+
+void MainWindow::onQuitClick() {
     hide();
+}
+
+bool MainWindow::isNodeUnique(ustring node) const {
+    for (auto &x : dataBase->children())
+        if (x[modelColumns.node] == node)
+            return false;
+    return true;
 }

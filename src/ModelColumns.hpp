@@ -1,5 +1,5 @@
 /*
- * App.hpp
+ * ModelColumns.hpp
  * 
  * Copyright 2014 Bartosz Kostaniak <bartas@debian>
  * 
@@ -20,32 +20,21 @@
  * 
  */
 
-#ifndef APP_H
-#define APP_H
+#ifndef MODELCOLUMNS_H
+#define MODELCOLUMNS_H
 
-#include <gtkmm/window.h>
-#include <gtkmm/builder.h>
-#include <gtkmm/button.h>
-#include <gtkmm/window.h>
-#include <glibmm/refptr.h>
-
-#include "MainWindow.hpp"
+#include <gtkmm/treemodelcolumn.h>
 
 using namespace Gtk;
 using namespace Glib;
-using namespace std;
 
-class App {
+class ModelColumns : public TreeModelColumnRecord {
     public:
-        App(int &argc, char *argv[]);
-        ~App();
+        ModelColumns() { add(id); add(node); add(value); }
 
-        void run();
-    private:
-        void setup();
-        
-        RefPtr<Application> gtkApp;
-        MainWindow *mainWindow;
+        TreeModelColumn<guint>   id;
+        TreeModelColumn<ustring> node;
+        TreeModelColumn<ustring> value;
 };
 
-#endif /* APP_H */
+#endif /* MODELCOLUMNS_H */

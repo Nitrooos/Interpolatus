@@ -25,14 +25,20 @@
 #define MAINWINDOW_H
 
 #include <gtkmm/window.h>
+#include <gtkmm/label.h>
 #include <gtkmm/liststore.h>
-#include <gtkmm/notebook.h>
 #include <gtkmm/treeview.h>
 #include <gtkmm/builder.h>
+#include <gtkmm/dialog.h>
 #include <glibmm/refptr.h>
+
+#include "ModelColumns.hpp"
+
+class AddNodesWindow;
 
 using namespace Gtk;
 using namespace Glib;
+using namespace std;
 
 class MainWindow: public Window {
     public:
@@ -40,14 +46,28 @@ class MainWindow: public Window {
         virtual ~MainWindow();
 
     private:
-        void on_button_quit();
-        void on_node_edited(const ustring &path, const ustring &new_text);
-    
+        void onQuitClick();
+        void onAddNodesButtonClick();
+        void onRemoveAllNodesButtonClick();
+        void onAddNodesWindowConfirmClick();
+        void onNodeEdited(const ustring &path, const ustring &new_text);
+        void onNodeSelect();
+
+        bool isNodeUnique(ustring node) const;
+
         RefPtr<Builder> builder;
+        RefPtr<TreeSelection> refTreeSelection;
         RefPtr<ListStore> dataBase;
-        Notebook *notebook;
-        TreeView *treeView;
-        Button *quitButton;
+        ModelColumns   modelColumns;
+
+        AddNodesWindow *addNodesWindow{nullptr};
+        Button         *addNodesButton{nullptr};
+        Button         *removeAllNodesButton{nullptr};
+        Button         *quitButton{nullptr};
+        TreeView       *treeView{nullptr};
+        Label          *statusBar{nullptr};
+
+        int nRecords{0};
 };
 
 #endif /* MAINWINDOW_H */ 

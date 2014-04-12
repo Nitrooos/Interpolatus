@@ -1,5 +1,5 @@
 /*
- * App.hpp
+ * AddNodesWindow.hpp
  * 
  * Copyright 2014 Bartosz Kostaniak <bartas@debian>
  * 
@@ -20,32 +20,37 @@
  * 
  */
 
-#ifndef APP_H
-#define APP_H
+#ifndef ADDNODESWINDOW_H
+#define ADDNODESWINDOW_H
 
 #include <gtkmm/window.h>
-#include <gtkmm/builder.h>
 #include <gtkmm/button.h>
-#include <gtkmm/window.h>
+#include <gtkmm/spinbutton.h>
+#include <gtkmm/builder.h>
 #include <glibmm/refptr.h>
-
-#include "MainWindow.hpp"
 
 using namespace Gtk;
 using namespace Glib;
 using namespace std;
 
-class App {
+class AddNodesWindow: public Window {
     public:
-        App(int &argc, char *argv[]);
-        ~App();
+        AddNodesWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder);
+        virtual ~AddNodesWindow();
 
-        void run();
+        Button & getConfirmButton() const;
+        int getnNodes() const;
+        long double getStartValue() const;
+        long double getStep() const;
     private:
-        void setup();
-        
-        RefPtr<Application> gtkApp;
-        MainWindow *mainWindow;
+        void on_button_click();
+    
+        RefPtr<Builder> builder;
+        Button *confirmButton{nullptr};
+        Button *cancelButton{nullptr};
+        SpinButton *nNodesSpin{nullptr};
+        SpinButton *startValueSpin{nullptr};
+        SpinButton *stepSpin{nullptr};
 };
 
-#endif /* APP_H */
+#endif /* ADDNODESWINDOW_H */

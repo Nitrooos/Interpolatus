@@ -88,7 +88,7 @@ long double Algorithms::lagrange(int n, vector<long double> const &x, vector<lon
 //                                                                           
 //---------------------------------------------------------------------------
 
-long double Algorithms::neville (int n, vector<long double> const &x, vector<long double> &f, long double xx, int &st) {
+long double Algorithms::neville(int n, vector<long double> const &x, vector<long double> &f, long double xx, int &st) {
     int i, k;
     if (n < 0)
         st = 1;

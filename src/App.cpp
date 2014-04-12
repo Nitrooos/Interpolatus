@@ -8,7 +8,7 @@
 
 App::App(int &argc, char *argv[])
     : gtkApp(Gtk::Application::create(argc, argv, "org.gtkmm.examples.base")),
-      mainWindow(0) {
+      mainWindow(nullptr) {
     setup();
 }
 
@@ -23,13 +23,13 @@ void App::setup() {
         refBuilder->add_from_file("../ui/treeView.glade");
     }
     catch(const Glib::FileError& ex) {
-        throw AppSetupError("FileError: " + ex.what());
+        throw AppInitError("FileError: " + ex.what());
     }
     catch(const Glib::MarkupError& ex) {
-        throw AppSetupError("MarkupError: " + ex.what());
+        throw AppInitError("MarkupError: " + ex.what());
     }
     catch(const Gtk::BuilderError& ex) {
-        throw AppSetupError("BuilderError: " + ex.what());
+        throw AppInitError("BuilderError: " + ex.what());
     }
 
     // Spróbuj pobrać z pliku potrzebne widgety
@@ -45,14 +45,18 @@ int main(int argc, char *argv[]) {
         App *app = new App(argc, argv);
         app->run();
         delete app;
-        
+
         return 0;
     }
-    catch (std::exception const& e) {
-        std::cerr << "Running app failed:\n" << e.what() << "\n";
+    catch (LoadWidgetError const& e) {
+        MessageDialog dialog{ustring{e.what()}, false, MESSAGE_ERROR, BUTTONS_CLOSE};
+        dialog.run();
+    }
+    catch (AppInitError const& e) {
+        cerr << e.what() << "\n";
     }
     catch (...) {
-        std::cerr << "Unexpected exception has occured!\n";       // Kernel Panic
+        cerr << "Unexpected exception has occured!\n";       // Kernel Panic
     }
     return 1;
 }

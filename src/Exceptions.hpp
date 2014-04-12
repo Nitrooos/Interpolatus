@@ -2,7 +2,7 @@
  * File:   exceptions.hpp
  * Author: bartas
  *
- * Created on December 15, 2013, 6:42 PM
+ * Created on March 15, 2014, 6:42 PM
  */
 
 #ifndef EXCEPTIONS_HPP
@@ -13,13 +13,24 @@
 
 using namespace std;
 
-struct AppSetupError : public exception {
+struct AppInitError : public exception {
     public:
-        AppSetupError(string error) : error(error) { }
-        ~AppSetupError() throw() { }
+        AppInitError(string error)
+            : error("AppInitError exception thrown!\n" + error) { }
+        ~AppInitError() throw() { }
         const char *what() const throw() { return error.c_str(); }
     private:
         string error;
+};
+
+struct LoadWidgetError : public exception {
+    public:
+        LoadWidgetError(string widget)
+            : widget("LoadWidgetError exception thrown!\nFailed to load widget: " + widget) { }
+        ~LoadWidgetError() throw() { }
+        const char *what() const throw() { return widget.c_str(); }
+    private:
+        string widget;
 };
 
 #endif	/* EXCEPTIONS_HPP */
