@@ -1,5 +1,5 @@
 /*
- * ModelColumns.hpp
+ * Types.hpp
  *
  * Copyright 2014 Bartosz Kostaniak <bartas@debian>
  *
@@ -20,32 +20,23 @@
  *
  */
 
-#ifndef MODELCOLUMNS_H
-#define MODELCOLUMNS_H
+#ifndef TYPES_H
+#define TYPES_H
 
-#include <gtkmm/treemodelcolumn.h>
-#include <string>
+#include "IntervalArithmetic.hpp"
 
-using namespace Gtk;
-using namespace Glib;
-using namespace std;
+enum class ColumnEdit : char { NODE, VALUE, NODE_LEFT, NODE_RIGHT, VALUE_LEFT, VALUE_RIGHT };
+enum class Arthmetic  : char { FLOAT_POINT, HALF_INTERV, FULL_INTERV };
+enum class Algorithm  : char { LAGRANGE, NEVILLE };
 
-class ModelColumns : public TreeModelColumnRecord {
-    public:
-        ModelColumns() {
-            add(id);
-            add(node);  add(value);
-            add(nodeLeftEnd);   add(nodeRightEnd);
-            add(valueLeftEnd);  add(valueRightEnd);
-        }
+namespace Info {
 
-        TreeModelColumn<guint>   id;
-        TreeModelColumn<string> node,
-                                value,
-                                nodeLeftEnd,
-                                nodeRightEnd,
-                                valueLeftEnd,
-                                valueRightEnd;
-};
+    struct AddNodes {
+        int nNodes;                          // ilość węzłów
+        long double startValue, step;       // pierwszy węzeł, odstęp między węzłami
+        long double intervalWidth;          // opcjonalnie szerokość przedziału (a. interwałowa 2)
+    };
 
-#endif /* MODELCOLUMNS_H */
+} // namespace Info
+
+#endif /* TYPES_H */

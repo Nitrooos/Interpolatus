@@ -45,7 +45,7 @@ class App {
         void setup();
         
         RefPtr<Application> gtkApp;
-        MainWindow *mainWindow;
+        MainWindow *mainWindow{nullptr};
 };
 
 #endif /* APP_H */

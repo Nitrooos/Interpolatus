@@ -16,7 +16,7 @@ using namespace std;
 struct AppInitError : public exception {
     public:
         AppInitError(string error)
-            : error("AppInitError exception thrown!\n" + error) { }
+            : error("Rzucono wyjątek klasy AppInitError:\n" + error) { }
         ~AppInitError() throw() { }
         const char *what() const throw() { return error.c_str(); }
     private:
@@ -26,11 +26,17 @@ struct AppInitError : public exception {
 struct LoadWidgetError : public exception {
     public:
         LoadWidgetError(string widget)
-            : widget("LoadWidgetError exception thrown!\nFailed to load widget: " + widget) { }
+            : widget("Rzucono wyjątek klasy LoadWidgetError:\nFailed to load widget: " + widget) { }
         ~LoadWidgetError() throw() { }
         const char *what() const throw() { return widget.c_str(); }
     private:
         string widget;
+};
+
+struct DuplicateNode : public exception {
+    DuplicateNode() { }
+    ~DuplicateNode() throw() { }
+    const char *what() const throw() { return "Rzucono wyjątek klasy DuplicateNode: Podany węzeł już istnieje"; }
 };
 
 #endif	/* EXCEPTIONS_HPP */

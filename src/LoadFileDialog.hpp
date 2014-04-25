@@ -1,7 +1,7 @@
 /*
- * ModelColumns.hpp
+ * LoadFileDialog.hpp
  *
- * Copyright 2014 Bartosz Kostaniak <bartas@debian>
+ * Copyright 2014 Bartosz Kostaniak <bartosz@inspiron>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,32 +20,21 @@
  *
  */
 
-#ifndef MODELCOLUMNS_H
-#define MODELCOLUMNS_H
+#ifndef LOADFILEDIALOG_H
+#define LOADFILEDIALOG_H
 
-#include <gtkmm/treemodelcolumn.h>
-#include <string>
+#include <gtkmm/filechooserdialog.h>
+#include <gtkmm/builder.h>
+#include <glibmm/refptr.h>
 
 using namespace Gtk;
 using namespace Glib;
-using namespace std;
 
-class ModelColumns : public TreeModelColumnRecord {
+class LoadFileDialog : public FileChooserDialog {
     public:
-        ModelColumns() {
-            add(id);
-            add(node);  add(value);
-            add(nodeLeftEnd);   add(nodeRightEnd);
-            add(valueLeftEnd);  add(valueRightEnd);
-        }
-
-        TreeModelColumn<guint>   id;
-        TreeModelColumn<string> node,
-                                value,
-                                nodeLeftEnd,
-                                nodeRightEnd,
-                                valueLeftEnd,
-                                valueRightEnd;
+        LoadFileDialog(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder);
+    private:
+        RefPtr<Builder> builder;
 };
 
-#endif /* MODELCOLUMNS_H */
+#endif /* LOADFILEDIALOG_H */
