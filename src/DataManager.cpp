@@ -5,6 +5,7 @@
 #include <gtkmm.h>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
 
 DataManager::DataRecord::DataRecord()
     : node(0.0), value(0.0), nodeI({0.0, 0.0}), valueI({0.0, 0.0}) { }
@@ -14,6 +15,32 @@ DataManager::DataManager(RefPtr<Builder> const& builder) {
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
     if (!builder)
         throw LoadWidgetError("dataBase");
+}
+
+void DataManager::loadFile(string name) {
+    removeAllRecords();
+
+    int id;
+    ifstream F(name);
+    for (;;) {
+        DataRecord dr;
+        F >> id >> dr.node >> dr.value >> dr.nodeI.a >> dr.nodeI.b >> dr.valueI.a >> dr.valueI.b;
+        if (F) {
+            data[id] = dr;
+            addRecordToBase(id, dr);
+        } else break;
+    }
+    F.close();
+}
+
+void DataManager::saveFile(string name) {
+    ofstream G(name);
+    for (auto &dr : data) {
+        G << dr.first << "\t" << dr.second.node     << "\t" << dr.second.value <<
+                         "\t" << dr.second.nodeI.a  << "\t" << dr.second.nodeI.b <<
+                         "\t" << dr.second.valueI.a << "\t" << dr.second.valueI.b << "\n";
+    }
+    G.close();
 }
 
 void DataManager::changeArthmetic(Arthmetic mode) {
@@ -49,7 +76,7 @@ void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnE
 
 void DataManager::addRecords(Info::AddNodes const& info) {
     int newKey = 0;
-    if (data.size() != 0)
+    if (data.empty() == false)
         newKey = data.rbegin()->first + 1;
 
     switch (arthm) {

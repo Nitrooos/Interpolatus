@@ -24,7 +24,7 @@
 #include "MainWindow.hpp"
 #include "AddNodesWindow.hpp"
 #include "DataManager.hpp"
-#include "LoadFileDialog.hpp"
+#include "FileDialog.hpp"
 #include "ModelColumns.hpp"
 #include "Glade.hpp"
 #include "Exceptions.hpp"
@@ -45,6 +45,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     removeSelNodesButton = dynamic_cast<Button *>      (Glade::loadWidget("removeSelNodes", builder));
     removeAllNodesButton = dynamic_cast<Button *>      (Glade::loadWidget("removeAllNodes", builder));
     fileChooseButton     = dynamic_cast<Button *>      (Glade::loadWidget("fileChooseButton", builder));
+    fileSaveButton       = dynamic_cast<Button *>      (Glade::loadWidget("fileSaveButton", builder));
     halfIntervalRadio    = dynamic_cast<RadioButton *> (Glade::loadWidget("halfIntervalRadio", builder));
     floatRadio           = dynamic_cast<RadioButton *> (Glade::loadWidget("floatRadio", builder));
     fullIntervalRadio    = dynamic_cast<RadioButton *> (Glade::loadWidget("fullIntervalRadio", builder));
@@ -63,14 +64,14 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
 
     // Dialog wyboru pliku do załadowania
     Glade::loadFile("../ui/FileChooserDialog.glade", builder);
-    builder->get_widget_derived("fileChooserDialog", loadFileDialog);
+    builder->get_widget_derived("fileChooserDialog", fileDialog);
 
     // Przygotuj się do przechwytywania sygnału zaznaczenia wiersza
     refTreeSelection = treeView->get_selection();
     refTreeSelection->set_mode(Gtk::SELECTION_MULTIPLE);
 
     // Jeśli wszystko poszło OK
-    set_default_size(1024, 480);
+    set_default_size(1200, 500);
 
     CellRendererText *rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(1));
     rend->signal_edited().connect(
@@ -88,7 +89,11 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
 
     removeAllNodesButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onRemoveAllNodesButtonClick));
 
-    fileChooseButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onFileChooseButtonClick));
+    fileChooseButton->signal_clicked().connect(
+        sigc::bind<Button *>(sigc::mem_fun(*this, &MainWindow::onFileButtonClick), fileChooseButton));
+
+    fileSaveButton->signal_clicked().connect(
+        sigc::bind<Button *>(sigc::mem_fun(*this, &MainWindow::onFileButtonClick), fileSaveButton));
 
     floatRadio->signal_clicked().connect(
         sigc::bind<RadioButton *>(sigc::mem_fun(*this, &MainWindow::onArthmRadioClick), floatRadio));
@@ -120,11 +125,12 @@ MainWindow::~MainWindow() {
 
     delete removeAllNodesButton;
     delete removeSelNodesButton;
+    delete fileSaveButton;
     delete fileChooseButton;
     delete addNodesButton;
 
     delete dataManager;
-    delete loadFileDialog;
+    delete fileDialog;
     delete addNodesWindow;
 }
 
@@ -178,40 +184,35 @@ void MainWindow::onRemoveAllNodesButtonClick() {
     statusBar->set_label("");
 }
 
-void MainWindow::onFileChooseButtonClick() {
-    // Pokaż dialog
-    loadFileDialog->show();
-    // Uruchom dialog i przechwyć odpowiedź
-    int result = loadFileDialog->run();
-    // Ukryj dialog
-    loadFileDialog->hide();
+void MainWindow::onFileButtonClick(Button *btn) {
+    if (btn == this->fileChooseButton)
+        fileDialog->setMode(true);                  // Dialog do wczytywania pliku
+    else
+        fileDialog->setMode(false);                 // Zapisywanie do pliku
 
-    switch (result) {
-        case RESPONSE_OK: {
-            cout << "Open clicked\n";
-            // Notice that this is a std::string, not a Glib::ustring.
-            string filename = loadFileDialog->get_filename();
-            cout << "File selected: " << filename << "\n";
-            break;
-        }
-        case RESPONSE_CANCEL: {
-            cout << "Cancel clicked.\n";
-            break;
-        }
+    fileDialog->show();                             // Pokaż dialog
+    int result = fileDialog->run();                 // Uruchom dialog i przechwyć odpowiedź
+    fileDialog->hide();                             // Ukryj dialog
+
+    if (btn == this->fileChooseButton && result == RESPONSE_OK) {
+        dataManager->loadFile(fileDialog->get_filename());
+        return;
     }
+    if (btn == this->fileSaveButton && result == RESPONSE_OK)
+        dataManager->saveFile(fileDialog->get_filename());
 }
 
 void MainWindow::onArthmRadioClick(RadioButton *rb) {
     if (!rb->get_active())
         return;
 
-    constexpr bool visibility[2][6] = { { 1, 1, 0, 0, 0, 0 }, { 0, 0, 1, 1, 1, 1 } };
+    constexpr bool visibility[2][7] = { { 1, 1, 1, 0, 0, 0, 0 }, { 1, 0, 0, 1, 1, 1, 1 } };
     if (rb == this->floatRadio || rb == this->halfIntervalRadio)
-        for (int i = 1; i < treeView->get_n_columns(); ++i)
-            treeView->get_column(i)->set_visible(visibility[0][i-1]);
+        for (int i = 0, n = treeView->get_n_columns(); i < n; ++i)
+            treeView->get_column(i)->set_visible(visibility[0][i]);
     else
-        for (int i = 1; i < treeView->get_n_columns(); ++i)
-            treeView->get_column(i)->set_visible(visibility[1][i-1]);
+        for (int i = 0, n = treeView->get_n_columns(); i < n; ++i)
+            treeView->get_column(i)->set_visible(visibility[1][i]);
 
     if (rb == this->floatRadio)
         dataManager->changeArthmetic(Arthmetic::FLOAT_POINT);

@@ -26,6 +26,7 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/builder.h>
 #include <glibmm/refptr.h>
+#include <string>
 #include <map>
 
 using namespace std;
@@ -40,6 +41,9 @@ struct AddNodesInfo;
 class DataManager {
     public:
         DataManager(RefPtr<Builder> const& builder);
+
+        void loadFile(string name);
+        void saveFile(string name);
 
         void changeArthmetic(Arthmetic mode);
         /* NIEDOKOŃCZONE */void changeRecord(ustring const& path, ustring const& value, ColumnEdit col);

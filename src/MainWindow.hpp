@@ -41,7 +41,7 @@ using namespace std;
 
 class AddNodesWindow;
 class DataManager;
-class LoadFileDialog;
+class FileDialog;
 
 class MainWindow: public Window {
     public:
@@ -52,7 +52,7 @@ class MainWindow: public Window {
         void onAddNodesButtonClick();
         void onRemoveSelNodesButtonClick();
         void onRemoveAllNodesButtonClick();
-        void onFileChooseButtonClick();
+        void onFileButtonClick(Button *btn);
         void onArthmRadioClick(RadioButton *rb);
         void onAlgorithmRadioClick(RadioButton *rb);
         void onRecordEdit(const ustring &path, const ustring &newText, ColumnEdit column);
@@ -62,13 +62,14 @@ class MainWindow: public Window {
         RefPtr<TreeSelection> refTreeSelection;
 
         AddNodesWindow *addNodesWindow{nullptr};
-        LoadFileDialog *loadFileDialog{nullptr};
+        FileDialog     *fileDialog{nullptr};
         DataManager    *dataManager{nullptr};
 
         Button         *addNodesButton{nullptr};
         Button         *removeSelNodesButton{nullptr};
         Button         *removeAllNodesButton{nullptr};
         Button         *fileChooseButton{nullptr};
+        Button         *fileSaveButton{nullptr};
 
         RadioButton    *floatRadio{nullptr};
         RadioButton    *halfIntervalRadio{nullptr};
