@@ -46,6 +46,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     removeAllNodesButton = dynamic_cast<Button *>      (Glade::loadWidget("removeAllNodes", builder));
     fileChooseButton     = dynamic_cast<Button *>      (Glade::loadWidget("fileChooseButton", builder));
     fileSaveButton       = dynamic_cast<Button *>      (Glade::loadWidget("fileSaveButton", builder));
+    interpolButton       = dynamic_cast<Button *>      (Glade::loadWidget("interpolButton", builder));
     halfIntervalRadio    = dynamic_cast<RadioButton *> (Glade::loadWidget("halfIntervalRadio", builder));
     floatRadio           = dynamic_cast<RadioButton *> (Glade::loadWidget("floatRadio", builder));
     fullIntervalRadio    = dynamic_cast<RadioButton *> (Glade::loadWidget("fullIntervalRadio", builder));
@@ -53,6 +54,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     nevilleRadio         = dynamic_cast<RadioButton *> (Glade::loadWidget("nevilleRadio", builder));
     statusBar            = dynamic_cast<Label *>       (Glade::loadWidget("statusBar", builder));
     interpolPoint        = dynamic_cast<Entry *>       (Glade::loadWidget("interpolPoint", builder));
+    resultEntry          = dynamic_cast<Entry *>       (Glade::loadWidget("resultEntry", builder));
 
     // Uruchom dataManager'a
     dataManager = new DataManager(builder);
@@ -84,17 +86,14 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::onQuitClick));
 
     addNodesButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onAddNodesButtonClick));
-
     removeSelNodesButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onRemoveSelNodesButtonClick));
-
     removeAllNodesButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onRemoveAllNodesButtonClick));
+    interpolButton->signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::onInterpolButtonClick));
 
     fileChooseButton->signal_clicked().connect(
         sigc::bind<Button *>(sigc::mem_fun(*this, &MainWindow::onFileButtonClick), fileChooseButton));
-
     fileSaveButton->signal_clicked().connect(
         sigc::bind<Button *>(sigc::mem_fun(*this, &MainWindow::onFileButtonClick), fileSaveButton));
-
     floatRadio->signal_clicked().connect(
         sigc::bind<RadioButton *>(sigc::mem_fun(*this, &MainWindow::onArthmRadioClick), floatRadio));
     halfIntervalRadio->signal_clicked().connect(
@@ -113,6 +112,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
 }
 
 MainWindow::~MainWindow() {
+    delete resultEntry;
     delete interpolPoint;
     delete statusBar;
     delete treeView;
@@ -128,6 +128,7 @@ MainWindow::~MainWindow() {
     delete fileSaveButton;
     delete fileChooseButton;
     delete addNodesButton;
+    delete interpolButton;
 
     delete dataManager;
     delete fileDialog;
@@ -202,6 +203,16 @@ void MainWindow::onFileButtonClick(Button *btn) {
         dataManager->saveFile(fileDialog->get_filename());
 }
 
+void MainWindow::onInterpolButtonClick() {
+    try {
+        dataManager->setInterpolPoint(stold(interpolPoint->get_text()));
+        dataManager->interpolation();
+        resultEntry->set_text(dataManager->getResult());
+    } catch (...) {
+        cerr << "Coś złapano!\n";
+    }
+}
+
 void MainWindow::onArthmRadioClick(RadioButton *rb) {
     if (!rb->get_active())
         return;
@@ -215,11 +226,11 @@ void MainWindow::onArthmRadioClick(RadioButton *rb) {
             treeView->get_column(i)->set_visible(visibility[1][i]);
 
     if (rb == this->floatRadio)
-        dataManager->changeArthmetic(Arthmetic::FLOAT_POINT);
+        dataManager->setArthmetic(Arthmetic::FLOAT_POINT);
     else if (rb == this->halfIntervalRadio)
-        dataManager->changeArthmetic(Arthmetic::HALF_INTERV);
+        dataManager->setArthmetic(Arthmetic::HALF_INTERV);
     else
-        dataManager->changeArthmetic(Arthmetic::FULL_INTERV);
+        dataManager->setArthmetic(Arthmetic::FULL_INTERV);
 
     onRowSelect();
 }
@@ -229,9 +240,9 @@ void MainWindow::onAlgorithmRadioClick(RadioButton *rb) {
         return;
 
     if (rb == this->lagrangeRadio)
-        cout << "Lagrange\n";
+        dataManager->setAlgorithm(Algorithm::LAGRANGE);
     else
-        cout << "Neville\n";
+        dataManager->setAlgorithm(Algorithm::NEVILLE);
 }
 
 bool MainWindow::onQuitClick(GdkEventAny *event) {

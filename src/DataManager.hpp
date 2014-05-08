@@ -41,17 +41,24 @@ struct AddNodesInfo;
 class DataManager {
     public:
         DataManager(RefPtr<Builder> const& builder);
+        ~DataManager();
+
+        void setArthmetic(Arthmetic mode);
+        void setAlgorithm(Algorithm algorithm);
+        void setInterpolPoint(long double point);
 
         void loadFile(string name);
         void saveFile(string name);
 
-        void changeArthmetic(Arthmetic mode);
         /* NIEDOKOŃCZONE */void changeRecord(ustring const& path, ustring const& value, ColumnEdit col);
         /* NIEDOKOŃCZONE */void addRecords(Info::AddNodes const& info);
         void removeRecords(vector<TreePath> const& sel);
         void removeAllRecords();
         /* NIEDOKOŃCZONE */string getRecordInfo(TreePath const& path);
         Arthmetic whatArthmetic() const;
+        ustring getResult() const;
+
+        void interpolation();
     private:
         struct DataRecord {
             DataRecord();
@@ -65,6 +72,15 @@ class DataManager {
 
         Arthmetic arthm{Arthmetic::FLOAT_POINT};
         Algorithm algorithm{Algorithm::LAGRANGE};
+        long double interpolPoint{0.0};
+        DataRecord result;
+
+        // Uchwyt na bibliotekę .so
+        void *libHandle;
+        // Wskaźniki na funkcje udostępniane przed bibliotekę .so
+        long double (*lagrange)(int, vector<long double> const&, vector<long double> &, long double, int &),
+                    (*neville )(int, vector<long double> const&, vector<long double> &, long double, int &);
+
         map<int, DataRecord> data;
         RefPtr<ListStore> dataBase;
         ModelColumns modelColumns;

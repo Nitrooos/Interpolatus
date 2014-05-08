@@ -55,6 +55,7 @@ class MainWindow: public Window {
         void onFileButtonClick(Button *btn);
         void onArthmRadioClick(RadioButton *rb);
         void onAlgorithmRadioClick(RadioButton *rb);
+        void onInterpolButtonClick();
         void onRecordEdit(const ustring &path, const ustring &newText, ColumnEdit column);
         void onRowSelect();
 
@@ -70,6 +71,7 @@ class MainWindow: public Window {
         Button         *removeAllNodesButton{nullptr};
         Button         *fileChooseButton{nullptr};
         Button         *fileSaveButton{nullptr};
+        Button         *interpolButton{nullptr};
 
         RadioButton    *floatRadio{nullptr};
         RadioButton    *halfIntervalRadio{nullptr};
@@ -80,6 +82,7 @@ class MainWindow: public Window {
         TreeView       *treeView{nullptr};
         Label          *statusBar{nullptr};
         Entry          *interpolPoint{nullptr};
+        Entry          *resultEntry{nullptr};
 };
 
 #endif /* MAINWINDOW_H */

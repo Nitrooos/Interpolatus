@@ -3,18 +3,56 @@
 #include "Exceptions.hpp"
 
 #include <gtkmm.h>
-#include <sstream>
-#include <iomanip>
-#include <fstream>
+#include <sstream>                      // wczytywanie liczby do łańcucha
+#include <iomanip>                      // funkcja setprecision()
+#include <fstream>                      // ładowanie danych z pliku
+#include <dlfcn.h>                      // ładowanie biblioteki .so
 
 DataManager::DataRecord::DataRecord()
     : node(0.0), value(0.0), nodeI({0.0, 0.0}), valueI({0.0, 0.0}) { }
 
 DataManager::DataManager(RefPtr<Builder> const& builder) {
+    char *error;
+
+    libHandle = dlopen("/home/bartosz/Documents/EANproject/debug/libiln.so.1.0", RTLD_LAZY);
+    if (!libHandle) {
+        // Rzucenie wyjątku dlerror()
+        cout << "Nie mogę załadować biblioteki!\n";
+    }
+
+    lagrange = (decltype(lagrange))dlsym(libHandle, "lagrange");
+    if ((error = dlerror()) != NULL) {
+        // Rzucenie innym wyjątkiem
+        cout << "Nie mogę załadować funkcji!\n" << error;
+    }
+
+    neville = (decltype(neville))dlsym(libHandle, "neville");
+    if ((error = dlerror()) != NULL) {
+        // Rzucenie wyjątkiem
+        cout << "Nie mogę załadować funkcji!\n" << error;
+    }
+
+
     // Pobierz bazę danych
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
     if (!builder)
         throw LoadWidgetError("dataBase");
+}
+
+DataManager::~DataManager() {
+    dlclose(libHandle);                // dynamiczny unloading biblioteki
+}
+
+void DataManager::setArthmetic(Arthmetic mode) {
+    this->arthm = mode;
+}
+
+void DataManager::setAlgorithm(Algorithm algorithm) {
+    this->algorithm = algorithm;
+}
+
+void DataManager::setInterpolPoint(long double point) {
+    this->interpolPoint = point;
 }
 
 void DataManager::loadFile(string name) {
@@ -41,10 +79,6 @@ void DataManager::saveFile(string name) {
                          "\t" << dr.second.valueI.a << "\t" << dr.second.valueI.b << "\n";
     }
     G.close();
-}
-
-void DataManager::changeArthmetic(Arthmetic mode) {
-    this->arthm = mode;
 }
 
 void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnEdit col) {
@@ -140,15 +174,16 @@ string DataManager::getRecordInfo(TreePath const& path) {
     int id = (*dataBase->get_iter(path))[modelColumns.id];
 
     switch (arthm) {
-        case Arthmetic::FLOAT_POINT:
-            S << "x = " << fixed << setprecision(25) << data[id].node << "\t\tf(x) = " << data[id].value;
+        case Arthmetic::FLOAT_POINT: {
+            S << showpos << "x = " << fixed << setprecision(25) << data[id].node << "\t\tf(x) = " << data[id].value;
             break;
+        }
         case Arthmetic::HALF_INTERV:
             S << "Not implemented yet";
             break;
         case Arthmetic::FULL_INTERV:
-            S << "x = [" << fixed << setprecision(25) << data[id].nodeI.a << "; " << data[id].nodeI.b << "]\t\t" <<
-                 "f(x) = [" << data[id].valueI.a << "; " << data[id].valueI.b << "]";
+            S << showpos << "x = [" << fixed << setprecision(25) << data[id].nodeI.a << "; " << data[id].nodeI.b << "]\n" <<
+                            "f(x) = [" << data[id].valueI.a << "; " << data[id].valueI.b << "]";
             break;
     }
     return S.str();
@@ -156,6 +191,49 @@ string DataManager::getRecordInfo(TreePath const& path) {
 
 Arthmetic DataManager::whatArthmetic() const {
     return arthm;
+}
+
+ustring DataManager::getResult() const {
+    ostringstream S;
+    switch (this->arthm) {
+        case Arthmetic::FLOAT_POINT:
+            S << showpos << setprecision(25) << result.value;
+            break;
+    }
+    return S.str();
+}
+
+void DataManager::interpolation() {
+    switch (this->arthm) {
+        case Arthmetic::FLOAT_POINT: {
+            int status;
+            long double r = 0.0;
+            vector<long double> nodes, values;
+            nodes.reserve(data.size());
+            values.reserve(data.size());
+
+            for (auto &dr : data) {
+                nodes.push_back(dr.second.node);
+                values.push_back(dr.second.value);
+            }
+            switch (this->algorithm) {
+                case Algorithm::LAGRANGE:
+                    r = lagrange(data.size() - 1, nodes, values, interpolPoint, status);
+                    break;
+                case Algorithm::NEVILLE:
+                    r = neville (data.size() - 1, nodes, values, interpolPoint, status);
+                    break;
+            }
+            result.value = r;
+            break;
+        }
+        case Arthmetic::HALF_INTERV: {
+            break;
+        }
+        case Arthmetic::FULL_INTERV: {
+            break;
+        }
+    }
 }
 
 bool DataManager::isNodeUnique(long double node) const {
