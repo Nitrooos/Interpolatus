@@ -22,13 +22,9 @@
 //#include <mpfr.h>
 //#include <boost/lexical_cast.hpp>
 
+#include "Types.hpp"
 
 using namespace std;
-
-struct interval
-{
-    long double a, b;
-};
 
 //set precision
 const int curr_precision = 80;

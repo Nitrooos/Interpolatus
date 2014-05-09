@@ -23,11 +23,28 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "IntervalArithmetic.hpp"
-
 enum class ColumnEdit : char { NODE, VALUE, NODE_LEFT, NODE_RIGHT, VALUE_LEFT, VALUE_RIGHT };
 enum class Arthmetic  : char { FLOAT_POINT, HALF_INTERV, FULL_INTERV };
 enum class Algorithm  : char { LAGRANGE, NEVILLE };
+
+struct interval {
+    interval() : a(0.0), b(0.0) { }
+    interval(long double start, long double width) : a(start), b(start + width) { }
+
+    bool operator ==(interval const& interv) {
+        return (this->a == interv.a && this->b == interv.b);
+    }
+    interval & operator =(interval const& interv) {
+        this->a = interv.a;
+        this->b = interv.b;
+        return *this;
+    }
+    bool operator <(interval const& interv) const {
+        return (this->a < interv.a);
+    }
+
+    long double a, b;
+};
 
 namespace Info {
 

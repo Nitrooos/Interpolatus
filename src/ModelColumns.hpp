@@ -30,22 +30,27 @@ using namespace Gtk;
 using namespace Glib;
 using namespace std;
 
-class ModelColumns : public TreeModelColumnRecord {
+class ModelColumnsFloat : public TreeModelColumnRecord {
     public:
-        ModelColumns() {
-            add(id);
-            add(node);  add(value);
-            add(nodeLeftEnd);   add(nodeRightEnd);
-            add(valueLeftEnd);  add(valueRightEnd);
+        ModelColumnsFloat() {
+            add(node);
+            add(value);
         }
 
-        TreeModelColumn<guint>   id;
-        TreeModelColumn<string> node,
-                                value,
-                                nodeLeftEnd,
-                                nodeRightEnd,
-                                valueLeftEnd,
-                                valueRightEnd;
+        TreeModelColumn<string> node, value;
+};
+
+class ModelColumnsInterval : public TreeModelColumnRecord {
+    public:
+        ModelColumnsInterval() {
+            add(nodeLeftEnd);
+            add(nodeRightEnd);
+            add(valueLeftEnd);
+            add(valueRightEnd);
+        }
+
+        TreeModelColumn<string>  nodeLeftEnd,  nodeRightEnd,
+                                valueLeftEnd, valueRightEnd;
 };
 
 #endif /* MODELCOLUMNS_H */

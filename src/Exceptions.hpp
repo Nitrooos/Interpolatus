@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   exceptions.hpp
  * Author: bartas
  *
@@ -6,7 +6,7 @@
  */
 
 #ifndef EXCEPTIONS_HPP
-#define	EXCEPTIONS_HPP
+#define EXCEPTIONS_HPP
 
 #include <exception>
 #include <string>
@@ -39,5 +39,11 @@ struct DuplicateNode : public exception {
     const char *what() const throw() { return "Rzucono wyjątek klasy DuplicateNode: Podany węzeł już istnieje"; }
 };
 
-#endif	/* EXCEPTIONS_HPP */
+struct NodeFileError : public exception {
+    NodeFileError() { }
+    ~NodeFileError() throw() { }
+    const char *what() const throw() { return "Rzucono wyjątek klasy NodeFileError: Nieprawidłowy format pliku"; }
+};
+
+#endif  /* EXCEPTIONS_HPP */
 

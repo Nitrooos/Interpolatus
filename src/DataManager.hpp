@@ -24,6 +24,7 @@
 #define DATAMANAGER_H
 
 #include <gtkmm/liststore.h>
+#include <gtkmm/treeview.h>
 #include <gtkmm/builder.h>
 #include <glibmm/refptr.h>
 #include <string>
@@ -40,7 +41,7 @@ struct AddNodesInfo;
 
 class DataManager {
     public:
-        DataManager(RefPtr<Builder> const& builder);
+        DataManager(RefPtr<Builder> const& builder, TreeView *treeView);
         ~DataManager();
 
         void setArthmetic(Arthmetic mode);
@@ -60,30 +61,35 @@ class DataManager {
 
         void interpolation();
     private:
-        struct DataRecord {
-            DataRecord();
-
-            long double node, value;
-            interval nodeI, valueI;
-        };
-
         bool isNodeUnique(long double node) const;
-        void addRecordToBase(int id, DataRecord const& dr);
+        map<long double, long double>::iterator getNodeF(string number);
+        map<interval, interval>::iterator       getNodeHI(string number);
+        map<interval, interval>::iterator       getNodeFI(string leftEnd, string rightEnd);
 
         Arthmetic arthm{Arthmetic::FLOAT_POINT};
         Algorithm algorithm{Algorithm::LAGRANGE};
         long double interpolPoint{0.0};
-        DataRecord result;
 
         // Uchwyt na bibliotekę .so
         void *libHandle;
         // Wskaźniki na funkcje udostępniane przed bibliotekę .so
-        long double (*lagrange)(int, vector<long double> const&, vector<long double> &, long double, int &),
-                    (*neville )(int, vector<long double> const&, vector<long double> &, long double, int &);
+        long double (*lagrange)(map<long double, long double> &, long double, int &),
+                    (*neville )(map<long double, long double> &, long double, int &);
 
-        map<int, DataRecord> data;
-        RefPtr<ListStore> dataBase;
-        ModelColumns modelColumns;
+        TreeView *treeView{nullptr};
+        map<long double, long double> dataFloatPoint;
+        map<interval, interval> dataHalfInterval;
+        map<interval, interval> dataFullInterval;
+
+        RefPtr<ListStore> floatBase;
+        RefPtr<ListStore> halfIntervalBase;
+        RefPtr<ListStore> fullIntervalBase;
+        ModelColumnsFloat mColFloat;
+        ModelColumnsInterval mColInterval;
+
+        long double resultFloat{0.0};
+        interval resultHalfInterval{0.0, 0.0},
+                 resultFullInterval{0.0, 0.0};
 };
 
 #endif /* DATAMANAGER_H */

@@ -57,7 +57,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     resultEntry          = dynamic_cast<Entry *>       (Glade::loadWidget("resultEntry", builder));
 
     // Uruchom dataManager'a
-    dataManager = new DataManager(builder);
+    dataManager = new DataManager(builder, treeView);
 
     // Pobierz dodatkowe okienka - okno dodania nowych węzłów
     Glade::loadFile("../ui/AddNodesWindow.glade", builder);
@@ -75,11 +75,11 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     // Jeśli wszystko poszło OK
     set_default_size(1200, 500);
 
-    CellRendererText *rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(1));
+    CellRendererText *rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(0));
     rend->signal_edited().connect(
         sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::NODE));
 
-    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(2));
+    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(1));
     rend->signal_edited().connect(
         sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::VALUE));
 
@@ -216,14 +216,6 @@ void MainWindow::onInterpolButtonClick() {
 void MainWindow::onArthmRadioClick(RadioButton *rb) {
     if (!rb->get_active())
         return;
-
-    constexpr bool visibility[2][7] = { { 1, 1, 1, 0, 0, 0, 0 }, { 1, 0, 0, 1, 1, 1, 1 } };
-    if (rb == this->floatRadio || rb == this->halfIntervalRadio)
-        for (int i = 0, n = treeView->get_n_columns(); i < n; ++i)
-            treeView->get_column(i)->set_visible(visibility[0][i]);
-    else
-        for (int i = 0, n = treeView->get_n_columns(); i < n; ++i)
-            treeView->get_column(i)->set_visible(visibility[1][i]);
 
     if (rb == this->floatRadio)
         dataManager->setArthmetic(Arthmetic::FLOAT_POINT);
