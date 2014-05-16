@@ -29,9 +29,6 @@
 #include "Glade.hpp"
 #include "Exceptions.hpp"
 
-#include <gtkmm.h>
-#include <glibmm.h>
-
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -55,6 +52,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     statusBar            = dynamic_cast<Label *>       (Glade::loadWidget("statusBar", builder));
     interpolPoint        = dynamic_cast<Entry *>       (Glade::loadWidget("interpolPoint", builder));
     resultEntry          = dynamic_cast<Entry *>       (Glade::loadWidget("resultEntry", builder));
+    interpolLabel        = dynamic_cast<Label *>       (Glade::loadWidget("interpolLabel", builder));
 
     // Uruchom dataManager'a
     dataManager = new DataManager(builder);
@@ -112,6 +110,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
 }
 
 MainWindow::~MainWindow() {
+    delete interpolLabel;
     delete resultEntry;
     delete interpolPoint;
     delete statusBar;
@@ -208,6 +207,7 @@ void MainWindow::onInterpolButtonClick() {
         dataManager->setInterpolPoint(stold(interpolPoint->get_text()));
         dataManager->interpolation();
         resultEntry->set_text(dataManager->getResult());
+        interpolLabel->set_markup(dataManager->getFactors());
     } catch (...) {
         cerr << "Coś złapano!\n";
     }

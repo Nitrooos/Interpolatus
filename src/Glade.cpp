@@ -1,7 +1,9 @@
 #include "Glade.hpp"
 
-#include <gtkmm.h>
-#include <glibmm.h>
+#include "Exceptions.hpp"
+
+#include <glibmm/markup.h>
+#include <glibmm/fileutils.h>
 
 Widget *Glade::loadWidget(ustring name, RefPtr<Builder> const& builder) {
     Widget *ptr{nullptr};

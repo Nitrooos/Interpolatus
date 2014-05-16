@@ -1,20 +1,15 @@
 #include "DataManager.hpp"
-#include "Glade.hpp"
 #include "Exceptions.hpp"
 
-#include <gtkmm.h>
 #include <sstream>                      // wczytywanie liczby do łańcucha
 #include <iomanip>                      // funkcja setprecision()
 #include <fstream>                      // ładowanie danych z pliku
 #include <dlfcn.h>                      // ładowanie biblioteki .so
 
-DataManager::DataRecord::DataRecord()
-    : node(0.0), value(0.0), nodeI({0.0, 0.0}), valueI({0.0, 0.0}) { }
-
 DataManager::DataManager(RefPtr<Builder> const& builder) {
     char *error;
 
-    libHandle = dlopen("/home/bartosz/Documents/EANproject/debug/libiln.so.1.0", RTLD_LAZY);
+    libHandle = dlopen("../debug/libiln.so.1.0", RTLD_LAZY);
     if (!libHandle) {
         // Rzucenie wyjątku dlerror()
         cout << "Nie mogę załadować biblioteki!\n";
@@ -23,15 +18,20 @@ DataManager::DataManager(RefPtr<Builder> const& builder) {
     lagrange = (decltype(lagrange))dlsym(libHandle, "lagrange");
     if ((error = dlerror()) != NULL) {
         // Rzucenie innym wyjątkiem
-        cout << "Nie mogę załadować funkcji!\n" << error;
+        cout << "Nie mogę załadować funkcji: " << error << "\n";
     }
 
     neville = (decltype(neville))dlsym(libHandle, "neville");
     if ((error = dlerror()) != NULL) {
         // Rzucenie wyjątkiem
-        cout << "Nie mogę załadować funkcji!\n" << error;
+        cout << "Nie mogę załadować funkcji: " << error << "\n";
     }
 
+    calcFactors = (decltype(calcFactors))dlsym(libHandle, "factors");
+    if ((error = dlerror()) != NULL) {
+        // Rzucenie wyjątkiem
+        cout << "Nie mogę załadować funkcji: " << error << "\n";
+    }
 
     // Pobierz bazę danych
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
@@ -109,7 +109,7 @@ void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnE
 }
 
 void DataManager::addRecords(Info::AddNodes const& info) {
-    int newKey = 0;
+    int newKey = 1;
     if (data.empty() == false)
         newKey = data.rbegin()->first + 1;
 
@@ -193,37 +193,21 @@ Arthmetic DataManager::whatArthmetic() const {
     return arthm;
 }
 
-ustring DataManager::getResult() const {
-    ostringstream S;
-    switch (this->arthm) {
-        case Arthmetic::FLOAT_POINT:
-            S << showpos << setprecision(25) << result.value;
-            break;
-    }
-    return S.str();
-}
-
 void DataManager::interpolation() {
     switch (this->arthm) {
         case Arthmetic::FLOAT_POINT: {
             int status;
             long double r = 0.0;
-            vector<long double> nodes, values;
-            nodes.reserve(data.size());
-            values.reserve(data.size());
 
-            for (auto &dr : data) {
-                nodes.push_back(dr.second.node);
-                values.push_back(dr.second.value);
-            }
             switch (this->algorithm) {
                 case Algorithm::LAGRANGE:
-                    r = lagrange(data.size() - 1, nodes, values, interpolPoint, status);
+                    r = lagrange(data, interpolPoint, status);
                     break;
                 case Algorithm::NEVILLE:
-                    r = neville (data.size() - 1, nodes, values, interpolPoint, status);
+                    r = neville (data, interpolPoint, status);
                     break;
             }
+            factors = calcFactors(data, status);
             result.value = r;
             break;
         }
@@ -234,6 +218,30 @@ void DataManager::interpolation() {
             break;
         }
     }
+}
+
+ustring DataManager::getResult() const {
+    ostringstream S;
+    switch (this->arthm) {
+        case Arthmetic::FLOAT_POINT:
+            S << showpos << setprecision(25) << result.value;
+            break;
+    }
+    return S.str();
+}
+
+ustring DataManager::getFactors() const {
+    ostringstream S;
+    switch (this->arthm) {
+        case Arthmetic::FLOAT_POINT:
+            for (int i = 0, n = factors.size(); i < n; ++i)
+                if (factors[i] != 0)
+                    S << (factors[i] > 0 && i != 0 ? "+ " : "- ")
+                      <<  abs(factors[i]) << "x" << "<sup>" << n-i-1 << "</sup> "
+                      << ((i+1)%5 ? "" : "\n");
+            break;
+    }
+    return S.str();
 }
 
 bool DataManager::isNodeUnique(long double node) const {

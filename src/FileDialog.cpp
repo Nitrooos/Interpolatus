@@ -1,6 +1,6 @@
 #include "FileDialog.hpp"
 
-#include <gtkmm.h>
+#include <gtkmm/stock.h>
 
 FileDialog::FileDialog(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder)
     : FileChooserDialog(cobject), builder(refBuilder) {
@@ -14,6 +14,9 @@ FileDialog::FileDialog(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     // Dodaj przyciski Open i Cancel do dialogu
     add_button(Stock::CANCEL, RESPONSE_CANCEL);
     add_button(Stock::OPEN, RESPONSE_OK);
+
+    // Ustaw bieżący katalog na ten zawierający przykładowe pliki z danymi
+    set_current_folder("../data");
 
     hide();
 }

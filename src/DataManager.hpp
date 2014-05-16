@@ -26,7 +26,6 @@
 #include <gtkmm/liststore.h>
 #include <gtkmm/builder.h>
 #include <glibmm/refptr.h>
-#include <string>
 #include <map>
 
 using namespace std;
@@ -57,16 +56,10 @@ class DataManager {
         /* NIEDOKOŃCZONE */string getRecordInfo(TreePath const& path);
         Arthmetic whatArthmetic() const;
         ustring getResult() const;
+        ustring getFactors() const;
 
         void interpolation();
     private:
-        struct DataRecord {
-            DataRecord();
-
-            long double node, value;
-            interval nodeI, valueI;
-        };
-
         bool isNodeUnique(long double node) const;
         void addRecordToBase(int id, DataRecord const& dr);
 
@@ -74,12 +67,14 @@ class DataManager {
         Algorithm algorithm{Algorithm::LAGRANGE};
         long double interpolPoint{0.0};
         DataRecord result;
+        vector<long double> factors;
 
         // Uchwyt na bibliotekę .so
         void *libHandle;
         // Wskaźniki na funkcje udostępniane przed bibliotekę .so
-        long double (*lagrange)(int, vector<long double> const&, vector<long double> &, long double, int &),
-                    (*neville )(int, vector<long double> const&, vector<long double> &, long double, int &);
+        long double (*lagrange)(map<int, DataRecord> const&, long double, int &),
+                    (*neville )(map<int, DataRecord> const&, long double, int &);
+        vector<long double> (*calcFactors)(map<int, DataRecord> const&, int &);
 
         map<int, DataRecord> data;
         RefPtr<ListStore> dataBase;

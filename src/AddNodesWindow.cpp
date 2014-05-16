@@ -2,12 +2,6 @@
 #include "AddNodesWindow.hpp"
 #include "Glade.hpp"
 
-#include <gtkmm.h>
-#include <glibmm.h>
-
-#include <iostream>
-#include <iomanip>
-
 AddNodesWindow::AddNodesWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder)
     : Window(cobject), builder(refBuilder)
 {

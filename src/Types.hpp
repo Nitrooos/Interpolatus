@@ -29,6 +29,14 @@ enum class ColumnEdit : char { NODE, VALUE, NODE_LEFT, NODE_RIGHT, VALUE_LEFT, V
 enum class Arthmetic  : char { FLOAT_POINT, HALF_INTERV, FULL_INTERV };
 enum class Algorithm  : char { LAGRANGE, NEVILLE };
 
+struct DataRecord {
+    DataRecord()
+        : node(0.0), value(0.0), nodeI({0.0, 0.0}), valueI({0.0, 0.0}) { }
+
+    long double node, value;
+    interval nodeI, valueI;
+};
+
 namespace Info {
 
     struct AddNodes {

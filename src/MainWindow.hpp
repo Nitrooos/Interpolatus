@@ -31,8 +31,8 @@
 #include <gtkmm/builder.h>
 #include <gtkmm/radiobutton.h>
 #include <glibmm/refptr.h>
-#include "ModelColumns.hpp"
 
+#include "ModelColumns.hpp"
 #include "Types.hpp"
 
 using namespace Gtk;
@@ -81,6 +81,7 @@ class MainWindow: public Window {
 
         TreeView       *treeView{nullptr};
         Label          *statusBar{nullptr};
+        Label          *interpolLabel{nullptr};
         Entry          *interpolPoint{nullptr};
         Entry          *resultEntry{nullptr};
 };

@@ -2,8 +2,8 @@
 #include "Glade.hpp"
 #include "Exceptions.hpp"
 
-#include <glibmm.h>
-#include <gtkmm.h>
+#include <gtkmm/builder.h>
+#include <gtkmm/messagedialog.h>
 #include <iostream>
 
 App::App(int &argc, char *argv[])
@@ -24,7 +24,7 @@ void App::setup() {
     refBuilder->get_widget_derived("mainWindow", mainWindow);
 }
 
-void App::run() {    
+void App::run() {
     gtkApp->run(*mainWindow);
 }
 
