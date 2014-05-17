@@ -33,6 +33,8 @@
 #include <sstream>
 #include <iomanip>
 
+#include <gtkmm/messagedialog.h>
+
 MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilder)
     : Window(cobject), builder(refBuilder)
 {
@@ -145,7 +147,7 @@ void MainWindow::onRecordEdit(const ustring &pathString, const ustring &newText,
     } catch (out_of_range const& e) {
         statusBar->set_label("Wpisano wartość spoza zakresu liczby typu long double!");
     } catch (DuplicateNode const& e) {
-        statusBar->set_label("Podany węzeł już istnieje w siatce!");
+        statusBar->set_label(e.what());
     }
 }
 
@@ -195,7 +197,13 @@ void MainWindow::onFileButtonClick(Button *btn) {
     fileDialog->hide();                             // Ukryj dialog
 
     if (btn == this->fileChooseButton && result == RESPONSE_OK) {
-        dataManager->loadFile(fileDialog->get_filename());
+        try {
+            dataManager->loadFile(fileDialog->get_filename());
+        } catch (LoadIDFError const& e) {
+            MessageDialog dialog{ustring{e.what()}, false, MESSAGE_ERROR, BUTTONS_CLOSE};
+            dialog.run();
+        }
+
         return;
     }
     if (btn == this->fileSaveButton && result == RESPONSE_OK)
@@ -208,8 +216,10 @@ void MainWindow::onInterpolButtonClick() {
         dataManager->interpolation();
         resultEntry->set_text(dataManager->getResult());
         interpolLabel->set_markup(dataManager->getFactors());
-    } catch (...) {
-        cerr << "Coś złapano!\n";
+    } catch (EmptyData const& e) {
+        statusBar->set_label(e.what());
+    } catch (DuplicateNode const& e) {
+        statusBar->set_label(e.what());
     }
 }
 

@@ -3,7 +3,6 @@
 #include "Exceptions.hpp"
 
 #include <gtkmm/builder.h>
-#include <gtkmm/messagedialog.h>
 #include <iostream>
 
 App::App(int &argc, char *argv[])
@@ -34,15 +33,19 @@ int main(int argc, char *argv[]) {
         app.run();
 
         return 0;
-    }
-    catch (LoadWidgetError const& e) {
-        MessageDialog dialog{ustring{e.what()}, false, MESSAGE_ERROR, BUTTONS_CLOSE};
-        dialog.run();
-    }
-    catch (AppInitError const& e) {
-        cerr << e.what() << "\n";
-    }
-    catch (...) {
+    } catch (LoadGladeFileError const& e) {
+        e.message();
+    } catch (LoadWidgetError const& e) {
+        e.message();
+    } catch (LoadSharedFunError const& e) {
+        e.message();
+    } catch (LoadSharedLibError const& e) {
+        e.message();
+    } catch (AppInitError const& e) {
+        e.message();
+    } catch (exception const& e) {
+        cerr << "Zgłoszono wyjątek klasy std::exception: " << e.what() << "\n";
+    } catch (...) {
         cerr << "Unexpected exception has occured!\n";       // Kernel Panic
     }
     return 1;

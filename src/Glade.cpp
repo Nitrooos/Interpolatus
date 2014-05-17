@@ -19,12 +19,12 @@ void Glade::loadFile(ustring name, RefPtr<Builder> const& builder) {
         builder->add_from_file(name);
     }
     catch(const FileError& ex) {
-        throw AppInitError("FileError: " + ex.what());
+        throw LoadGladeFileError(name, "FileError: " + ex.what());
     }
     catch(const MarkupError& ex) {
-        throw AppInitError("MarkupError: " + ex.what());
+        throw LoadGladeFileError(name, "MarkupError: " + ex.what());
     }
     catch(const BuilderError& ex) {
-        throw AppInitError("BuilderError: " + ex.what());
+        throw LoadGladeFileError(name, "BuilderError: " + ex.what());
     }
 }

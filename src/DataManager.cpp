@@ -10,28 +10,20 @@ DataManager::DataManager(RefPtr<Builder> const& builder) {
     char *error;
 
     libHandle = dlopen("../debug/libiln.so.1.0", RTLD_LAZY);
-    if (!libHandle) {
-        // Rzucenie wyjątku dlerror()
-        cout << "Nie mogę załadować biblioteki!\n";
-    }
+    if (!libHandle)
+        throw LoadSharedLibError("../debug/libiln.so.1.0", dlerror());
 
     lagrange = (decltype(lagrange))dlsym(libHandle, "lagrange");
-    if ((error = dlerror()) != NULL) {
-        // Rzucenie innym wyjątkiem
-        cout << "Nie mogę załadować funkcji: " << error << "\n";
-    }
+    if ((error = dlerror()) != NULL)
+        throw LoadSharedFunError("../debug/libiln.so.1.0", "lagrange", error);
 
     neville = (decltype(neville))dlsym(libHandle, "neville");
-    if ((error = dlerror()) != NULL) {
-        // Rzucenie wyjątkiem
-        cout << "Nie mogę załadować funkcji: " << error << "\n";
-    }
+    if ((error = dlerror()) != NULL)
+        throw LoadSharedFunError("../debug/libiln.so.1.0", "neville", error);
 
     calcFactors = (decltype(calcFactors))dlsym(libHandle, "factors");
-    if ((error = dlerror()) != NULL) {
-        // Rzucenie wyjątkiem
-        cout << "Nie mogę załadować funkcji: " << error << "\n";
-    }
+    if ((error = dlerror()) != NULL)
+        throw LoadSharedFunError("../debug/libiln.so.1.0", "factors", error);
 
     // Pobierz bazę danych
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
@@ -58,7 +50,7 @@ void DataManager::setInterpolPoint(long double point) {
 void DataManager::loadFile(string name) {
     removeAllRecords();
 
-    int id;
+    int id, i = 0;
     ifstream F(name);
     for (;;) {
         DataRecord dr;
@@ -66,7 +58,12 @@ void DataManager::loadFile(string name) {
         if (F) {
             data[id] = dr;
             addRecordToBase(id, dr);
-        } else break;
+        } else {
+            if (i == 0)
+                throw LoadIDFError(name);
+            break;
+        }
+        ++i;
     }
     F.close();
 }
@@ -87,7 +84,7 @@ void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnE
 
     // Czy węzeł jest unikalny?
     if (col == ColumnEdit::NODE && !isNodeUnique(value))
-        throw DuplicateNode();          // jednak nie...
+        throw DuplicateNode(text.raw());          // jednak nie...
 
     // Uzyskanie iteratora ze ścieżki path
     TreeModel::iterator iter = dataBase->get_iter(TreePath(path));
@@ -207,6 +204,11 @@ void DataManager::interpolation() {
                     r = neville (data, interpolPoint, status);
                     break;
             }
+            if (status == 1)
+                throw EmptyData();
+            else if (status == 2)
+                throw DuplicateNode("<brak danych>");
+
             factors = calcFactors(data, status);
             result.value = r;
             break;
