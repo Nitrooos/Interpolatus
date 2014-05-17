@@ -1,5 +1,6 @@
 #include "DataManager.hpp"
 #include "Exceptions.hpp"
+#include "../shared/Algorithms.hpp"
 
 #include <sstream>                      // wczytywanie liczby do łańcucha
 #include <iomanip>                      // funkcja setprecision()
@@ -9,7 +10,7 @@
 DataManager::DataManager(RefPtr<Builder> const& builder) {
     char *error;
 
-    libHandle = dlopen("../debug/libiln.so.1.0", RTLD_LAZY);
+    /*libHandle = dlopen("../debug/libiln.so.1.0", RTLD_LAZY);
     if (!libHandle)
         throw LoadSharedLibError("../debug/libiln.so.1.0", dlerror());
 
@@ -24,6 +25,14 @@ DataManager::DataManager(RefPtr<Builder> const& builder) {
     calcFactors = (decltype(calcFactors))dlsym(libHandle, "factors");
     if ((error = dlerror()) != NULL)
         throw LoadSharedFunError("../debug/libiln.so.1.0", "factors", error);
+
+    lagrangeI = (decltype(lagrangeI))dlsym(libHandle, "lagrangeI");
+    if ((error = dlerror()) != NULL)
+        throw LoadSharedFunError("../debug/libiln.so.1.0", "lagrangeI", error);
+
+    nevilleI = (decltype(nevilleI))dlsym(libHandle, "nevilleI");
+    if ((error = dlerror()) != NULL)
+        throw LoadSharedFunError("../debug/libiln.so.1.0", "nevilleI", error);*/
 
     // Pobierz bazę danych
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
@@ -53,7 +62,7 @@ void DataManager::loadFile(string name) {
     int id, i = 0;
     ifstream F(name);
     for (;;) {
-        DataRecord dr;
+        Info::DataRecord dr;
         F >> id >> dr.node >> dr.value >> dr.nodeI.a >> dr.nodeI.b >> dr.valueI.a >> dr.valueI.b;
         if (F) {
             data[id] = dr;
@@ -113,7 +122,7 @@ void DataManager::addRecords(Info::AddNodes const& info) {
     switch (arthm) {
         case Arthmetic::FLOAT_POINT: {
             for (int i = 0, added = 0; i < info.nNodes; ++i) {
-                DataRecord dr;
+                Info::DataRecord dr;
                 dr.node  = info.startValue + i*info.step;
                 dr.value = 0.0;
                 if (!isNodeUnique(dr.node))
@@ -131,7 +140,7 @@ void DataManager::addRecords(Info::AddNodes const& info) {
         }
         case Arthmetic::FULL_INTERV: {
             for (int i = 0, added = 0; i < info.nNodes; ++i) {
-                DataRecord dr;
+                Info::DataRecord dr;
                 dr.nodeI.a  = info.startValue + i*info.step;
                 dr.nodeI.b  = dr.nodeI.a + info.intervalWidth;
                 dr.valueI.a = 0.0;
@@ -191,9 +200,9 @@ Arthmetic DataManager::whatArthmetic() const {
 }
 
 void DataManager::interpolation() {
+    int status;
     switch (this->arthm) {
         case Arthmetic::FLOAT_POINT: {
-            int status;
             long double r = 0.0;
 
             switch (this->algorithm) {
@@ -217,6 +226,23 @@ void DataManager::interpolation() {
             break;
         }
         case Arthmetic::FULL_INTERV: {
+            interval r;
+
+            switch (this->algorithm) {
+                case Algorithm::LAGRANGE:
+                    r = lagrangeI(data, interval(interpolPoint), status);
+                    break;
+                case Algorithm::NEVILLE:
+                    r = nevilleI (data, interval(interpolPoint), status);
+                    break;
+            }
+            if (status == 1)
+                throw EmptyData();
+            else if (status == 2)
+                throw DuplicateNode("<brak danych>");
+
+            // wspołczynniki wielomianu
+            result.valueI = r;
             break;
         }
     }
@@ -227,6 +253,11 @@ ustring DataManager::getResult() const {
     switch (this->arthm) {
         case Arthmetic::FLOAT_POINT:
             S << showpos << setprecision(25) << result.value;
+            break;
+        case Arthmetic::HALF_INTERV:
+            break;
+        case Arthmetic::FULL_INTERV:
+            S << result.valueI.write();
             break;
     }
     return S.str();
@@ -253,7 +284,7 @@ bool DataManager::isNodeUnique(long double node) const {
     return true;
 }
 
-void DataManager::addRecordToBase(int id, DataRecord const& dr) {
+void DataManager::addRecordToBase(int id, Info::DataRecord const& dr) {
     auto row = *(dataBase->append());
     row[modelColumns.id] = id;
     row[modelColumns.node]  = to_string(dr.node);

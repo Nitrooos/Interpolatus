@@ -29,18 +29,17 @@ enum class ColumnEdit : char { NODE, VALUE, NODE_LEFT, NODE_RIGHT, VALUE_LEFT, V
 enum class Arthmetic  : char { FLOAT_POINT, HALF_INTERV, FULL_INTERV };
 enum class Algorithm  : char { LAGRANGE, NEVILLE };
 
-struct DataRecord {
-    DataRecord()
-        : node(0.0), value(0.0), nodeI({0.0, 0.0}), valueI({0.0, 0.0}) { }
-
-    long double node, value;
-    interval nodeI, valueI;
-};
-
 namespace Info {
+    struct DataRecord {
+        DataRecord()
+            : node(0.0), value(0.0), nodeI(0), valueI(0) { }
+
+        long double node, value;
+        interval nodeI, valueI;
+    };
 
     struct AddNodes {
-        int nNodes;                          // ilość węzłów
+        int nNodes;                         // ilość węzłów
         long double startValue, step;       // pierwszy węzeł, odstęp między węzłami
         long double intervalWidth;          // opcjonalnie szerokość przedziału (a. interwałowa 2)
     };

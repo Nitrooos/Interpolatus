@@ -61,22 +61,26 @@ class DataManager {
         void interpolation();
     private:
         bool isNodeUnique(long double node) const;
-        void addRecordToBase(int id, DataRecord const& dr);
+        void addRecordToBase(int id, Info::DataRecord const& dr);
 
         Arthmetic arthm{Arthmetic::FLOAT_POINT};
         Algorithm algorithm{Algorithm::LAGRANGE};
         long double interpolPoint{0.0};
-        DataRecord result;
+        Info::DataRecord result;
         vector<long double> factors;
 
         // Uchwyt na bibliotekę .so
         void *libHandle;
-        // Wskaźniki na funkcje udostępniane przed bibliotekę .so
-        long double (*lagrange)(map<int, DataRecord> const&, long double, int &),
-                    (*neville )(map<int, DataRecord> const&, long double, int &);
-        vector<long double> (*calcFactors)(map<int, DataRecord> const&, int &);
+        // Wskaźniki na funkcje udostępniane przed bibliotekę .so (a. zmiennopozycyjna)
+        /*long double (*lagrange)(map<int, Info::DataRecord> const&, long double, int &),
+                    (*neville )(map<int, Info::DataRecord> const&, long double, int &);
+        vector<long double> (*calcFactors)(map<int, Info::DataRecord> const&, int &);*/
+        // Wskaźniki na funkcje udostępniane przed bibliotekę .so (a. przedziałowa)
+        /*interval (*lagrangeI)(map<int, Info::DataRecord> const&, interval const& xx, int&),
+                 (*nevilleI )(map<int, Info::DataRecord> const&, interval const& xx, int&);)*/
 
-        map<int, DataRecord> data;
+        map<int, Info::DataRecord> data;
+
         RefPtr<ListStore> dataBase;
         ModelColumns modelColumns;
 };

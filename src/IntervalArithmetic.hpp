@@ -19,16 +19,9 @@
 #include <fenv.h>
 #include <stdlib.h>
 #include <stdint.h>
-//#include <mpfr.h>
-//#include <boost/lexical_cast.hpp>
-
+#include <mpfr.h>
 
 using namespace std;
-
-struct interval
-{
-    long double a, b;
-};
 
 //set precision
 const int curr_precision = 80;
@@ -37,34 +30,31 @@ const int curr_precision = 80;
 const int originalRounding = fegetround();
 const char DecimalSeparator = '.';
 
-class IntervalArithmetic {
+class interval {
     public:
-        IntervalArithmetic();
-        virtual ~IntervalArithmetic();
-        long double IntWidth(const interval& x);
-        interval IAdd(const interval& x, const interval& y);
-        interval ISub(const interval& x, const interval& y);
-        interval IMul(const interval& x, const interval& y);
-        interval IDiv(const interval& x, const interval& y);
-        long double DIntWidth(const interval& x);
-        interval Projection(const interval& x);
-        interval Opposite(const interval& x);
-        interval Inverse(const interval& x);
-        interval DIAdd(const interval& x, const interval& y);
-        interval DISub(const interval& x, const interval& y);
-        interval DIMul(const interval& x, const interval& y);
-        interval DIDiv(const interval& x, const interval& y);
-        interval IntRead(const string& sa);
-        long double LeftRead(const string& sa);
-        long double RightRead(const string& sa);
-        interval ISin(const interval& x, int& st);
-        interval ICos(const interval& x, int& st);
-        interval IExp(const interval& x, int& st);
-        interval ISqr(const interval& x, int& st);
-        interval ISqr2();
-        interval ISqr3();
-        interval IPi();
-        void IEndsToStrings(const interval& i, string& left, string& right);
+        interval();
+        interval(int n);
+        interval(long double la, long double lb);
+        interval(const string &s);
+
+        virtual ~interval();
+
+        long double width();
+
+        interval operator+(const interval& y) const;
+        interval operator-(const interval& y) const;
+        interval operator*(const interval& y) const;
+        interval operator/(const interval& y) const;
+
+        interval& operator+=(const interval& y);
+        interval& operator-=(const interval& y);
+        interval& operator*=(const interval& y);
+        interval& operator/=(const interval& y);
+
+        interval read(const string& s);
+        string write() const;
+
+        long double a, b;
 };
 
 #endif /* INTERVALARITHMETIC_H_ */

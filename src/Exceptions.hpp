@@ -10,9 +10,12 @@
 
 #include <exception>
 #include <gtkmm/messagedialog.h>
+#include <glibmm/ustring.h>
 #include <string>
 
 using namespace std;
+using namespace Gtk;
+using namespace Glib;
 
 struct AppError : public exception {
     AppError(string strError) : error(strError) { }
@@ -53,6 +56,10 @@ struct AppInitError : public AppError {
 struct UserError : public AppError {
     UserError(string strError) : AppError("Błąd użytkownika:\n\t" + strError) { }
 };
+
+    struct IntervalEndsError : public UserError {
+        IntervalEndsError() : UserError("Prawy koniec przedziału musi być większy od lewego!") { }
+    };
 
     struct DuplicateNode : public UserError {
         DuplicateNode(string node) : UserError("Węzeł " + node + " już istnieje w siatce!") { }
