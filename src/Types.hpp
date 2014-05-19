@@ -31,8 +31,7 @@ enum class Algorithm  : char { LAGRANGE, NEVILLE };
 
 namespace Info {
     struct DataRecord {
-        DataRecord()
-            : node(0.0), value(0.0), nodeI(0), valueI(0) { }
+        DataRecord() : node(0.0), value(0.0), nodeI(0), valueI(0) { }
 
         long double node, value;
         interval nodeI, valueI;
@@ -45,5 +44,49 @@ namespace Info {
     };
 
 } // namespace Info
+
+using mymap = map<int, Info::DataRecord>;
+
+template<typename T> T getNode(const mymap::const_iterator& it) {
+    return T(0);
+}
+
+template<>
+inline long double getNode<long double>(const mymap::const_iterator& it) {
+    return it->second.node;
+}
+
+template<>
+inline interval getNode<interval>(const mymap::const_iterator& it) {
+    return it->second.nodeI;
+}
+
+template<typename T> T getValue(const mymap::const_iterator& it) {
+    return T(0);
+}
+
+template<typename T> T &getValue(const mymap::iterator& it) {
+    return T(0);
+}
+
+template<>
+inline long double getValue<long double>(const mymap::const_iterator& it) {
+    return it->second.value;
+}
+
+template<>
+inline long double &getValue<long double>(const mymap::iterator& it) {
+    return it->second.value;
+}
+
+template<>
+inline interval getValue<interval>(const mymap::const_iterator& it) {
+    return it->second.valueI;
+}
+
+template<>
+inline interval &getValue<interval>(const mymap::iterator& it) {
+    return it->second.valueI;
+}
 
 #endif /* TYPES_H */

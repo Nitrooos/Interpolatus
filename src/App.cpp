@@ -37,10 +37,6 @@ int main(int argc, char *argv[]) {
         e.message();
     } catch (LoadWidgetError const& e) {
         e.message();
-    } catch (LoadSharedFunError const& e) {
-        e.message();
-    } catch (LoadSharedLibError const& e) {
-        e.message();
     } catch (AppInitError const& e) {
         e.message();
     } catch (exception const& e) {

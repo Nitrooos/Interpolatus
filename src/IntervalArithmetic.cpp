@@ -14,6 +14,8 @@ interval::interval() : interval(0) { }
 
 interval::interval(int n) : interval(to_string(n)) { }
 
+interval::interval(long double f) : interval(to_string(f)) { }
+
 interval::interval(long double la, long double lb) {
     if (lb > la) {
         a = la;
@@ -146,6 +148,10 @@ interval& interval::operator/=(const interval& y) {
     return *this;
 }
 
+bool interval::operator==(const interval& y) const {
+    return (this->a == y.a && this->b == y.b);
+}
+
 interval interval::read(const string & s) {
     mpfr_t rop;
     mpfr_init2(rop, 80);
@@ -162,6 +168,6 @@ interval interval::read(const string & s) {
 
 string interval::write() const {
     ostringstream S;
-    S << showpos << setprecision(25) << "[" << a << "; " << b << "]";
+    S << showpos << fixed << setprecision(25) << "[" << a << "; " << b << "]";
     return S.str();
 }

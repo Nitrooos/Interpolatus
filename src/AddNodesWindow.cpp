@@ -57,9 +57,9 @@ void AddNodesWindow::onClick(Button *btn) {
         // Przygotowanie informacji do wysłania
         Info::AddNodes info;
         info.nNodes        = nNodesSpin->get_value();
-        info.startValue    = trunc(startValueSpin->get_value()*10)/(long double)10.0;
-        info.step          = trunc(stepSpin->get_value()*10)/(long double)10.0;
-        info.intervalWidth = trunc(intervalWidthSpin->get_value()*10)/(long double)10.0;
+        info.startValue    = round(startValueSpin->get_value()*10)/(long double)10.0;
+        info.step          = round(stepSpin->get_value()*10)/(long double)10.0;
+        info.intervalWidth = round(intervalWidthSpin->get_value()*100)/(long double)100.0;
         dataManager->addRecords(info);
     }
 

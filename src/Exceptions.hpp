@@ -42,17 +42,6 @@ struct AppInitError : public AppError {
             : AppInitError("Nie udało się wczytać widgetu: " + widget) { }
     };
 
-    struct LoadSharedLibError : public AppInitError {
-        LoadSharedLibError(string libName, string error)
-            : AppInitError("Nie udało się wczytać biblioteki dynamicznej " + libName + " z powodu\n\t" + error) { }
-    };
-
-    struct LoadSharedFunError : public AppInitError {
-        LoadSharedFunError(string libName, string funName, string error)
-            : AppInitError("Nie udało się wczytać funkcji " + funName + " z biblioteki dynamicznej " + libName +
-                           " z powodu\n\t" + error) { }
-    };
-
 struct UserError : public AppError {
     UserError(string strError) : AppError("Błąd użytkownika:\n\t" + strError) { }
 };

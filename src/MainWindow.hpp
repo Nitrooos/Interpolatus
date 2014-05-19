@@ -82,8 +82,8 @@ class MainWindow: public Window {
         TreeView       *treeView{nullptr};
         Label          *statusBar{nullptr};
         Label          *interpolLabel{nullptr};
+        Label          *resultLabel{nullptr};
         Entry          *interpolPoint{nullptr};
-        Entry          *resultEntry{nullptr};
 };
 
 #endif /* MAINWINDOW_H */

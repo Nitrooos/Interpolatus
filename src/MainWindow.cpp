@@ -53,7 +53,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     nevilleRadio         = dynamic_cast<RadioButton *> (Glade::loadWidget("nevilleRadio", builder));
     statusBar            = dynamic_cast<Label *>       (Glade::loadWidget("statusBar", builder));
     interpolPoint        = dynamic_cast<Entry *>       (Glade::loadWidget("interpolPoint", builder));
-    resultEntry          = dynamic_cast<Entry *>       (Glade::loadWidget("resultEntry", builder));
+    resultLabel          = dynamic_cast<Label *>       (Glade::loadWidget("resultLabel", builder));
     interpolLabel        = dynamic_cast<Label *>       (Glade::loadWidget("interpolLabel", builder));
 
     // Uruchom dataManager'a
@@ -82,6 +82,22 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
     rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(2));
     rend->signal_edited().connect(
         sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::VALUE));
+
+    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(3));
+    rend->signal_edited().connect(
+        sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::NODE_LEFT));
+
+    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(4));
+    rend->signal_edited().connect(
+        sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::NODE_RIGHT));
+
+    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(5));
+    rend->signal_edited().connect(
+        sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::VALUE_LEFT));
+
+    rend = dynamic_cast<CellRendererText *> (treeView->get_column_cell_renderer(6));
+    rend->signal_edited().connect(
+        sigc::bind<ColumnEdit>(sigc::mem_fun(*this, &MainWindow::onRecordEdit), ColumnEdit::VALUE_RIGHT));
 
     this->signal_delete_event().connect(sigc::mem_fun(*this, &MainWindow::onQuitClick));
 
@@ -113,7 +129,7 @@ MainWindow::MainWindow(BaseObjectType* cobject, const RefPtr<Builder>& refBuilde
 
 MainWindow::~MainWindow() {
     delete interpolLabel;
-    delete resultEntry;
+    delete resultLabel;
     delete interpolPoint;
     delete statusBar;
     delete treeView;
@@ -214,7 +230,7 @@ void MainWindow::onInterpolButtonClick() {
     try {
         dataManager->setInterpolPoint(stold(interpolPoint->get_text()));
         dataManager->interpolation();
-        resultEntry->set_text(dataManager->getResult());
+        resultLabel->set_text(dataManager->getResult());
         interpolLabel->set_markup(dataManager->getFactors());
     } catch (EmptyData const& e) {
         statusBar->set_label(e.what());

@@ -10,42 +10,18 @@
 DataManager::DataManager(RefPtr<Builder> const& builder) {
     char *error;
 
-    /*libHandle = dlopen("../debug/libiln.so.1.0", RTLD_LAZY);
-    if (!libHandle)
-        throw LoadSharedLibError("../debug/libiln.so.1.0", dlerror());
-
-    lagrange = (decltype(lagrange))dlsym(libHandle, "lagrange");
-    if ((error = dlerror()) != NULL)
-        throw LoadSharedFunError("../debug/libiln.so.1.0", "lagrange", error);
-
-    neville = (decltype(neville))dlsym(libHandle, "neville");
-    if ((error = dlerror()) != NULL)
-        throw LoadSharedFunError("../debug/libiln.so.1.0", "neville", error);
-
-    calcFactors = (decltype(calcFactors))dlsym(libHandle, "factors");
-    if ((error = dlerror()) != NULL)
-        throw LoadSharedFunError("../debug/libiln.so.1.0", "factors", error);
-
-    lagrangeI = (decltype(lagrangeI))dlsym(libHandle, "lagrangeI");
-    if ((error = dlerror()) != NULL)
-        throw LoadSharedFunError("../debug/libiln.so.1.0", "lagrangeI", error);
-
-    nevilleI = (decltype(nevilleI))dlsym(libHandle, "nevilleI");
-    if ((error = dlerror()) != NULL)
-        throw LoadSharedFunError("../debug/libiln.so.1.0", "nevilleI", error);*/
-
     // Pobierz bazę danych
     dataBase = RefPtr<ListStore>::cast_static(builder->get_object("dataBase"));
     if (!builder)
         throw LoadWidgetError("dataBase");
 }
 
-DataManager::~DataManager() {
-    dlclose(libHandle);                // dynamiczny unloading biblioteki
-}
+DataManager::~DataManager() { }
 
 void DataManager::setArthmetic(Arthmetic mode) {
     this->arthm = mode;
+    if (mode == Arthmetic::HALF_INTERV)                     // jeśli przełączamy się na a. przedziałową I
+        updateIntervalsFromPoints();
 }
 
 void DataManager::setAlgorithm(Algorithm algorithm) {
@@ -88,12 +64,22 @@ void DataManager::saveFile(string name) {
 }
 
 void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnEdit col) {
-    // Próba konwersji wpisanego tekstu na liczbę
-    long double value = stold(text.raw());
+    long double value;
+    interval valueInterval;
 
-    // Czy węzeł jest unikalny?
-    if (col == ColumnEdit::NODE && !isNodeUnique(value))
-        throw DuplicateNode(text.raw());          // jednak nie...
+    if (this->arthm == Arthmetic::HALF_INTERV) {
+        // Konwersja do przedziału
+        valueInterval = text.raw();
+        // Czy podany przez użytkownika węzeł jest unikalny?
+        if (col == ColumnEdit::NODE && !isNodeUnique(valueInterval))
+            throw DuplicateNode(text.raw());
+    } else {
+        // Próba konwersji wpisanego tekstu na liczbę
+        value = stold(text.raw());
+        // Czy węzeł jest unikalny?
+        if (col == ColumnEdit::NODE && !isNodeUnique(value))
+            throw DuplicateNode(text.raw());                    // jednak nie...
+    }
 
     // Uzyskanie iteratora ze ścieżki path
     TreeModel::iterator iter = dataBase->get_iter(TreePath(path));
@@ -103,12 +89,30 @@ void DataManager::changeRecord(ustring const& path, ustring const& text, ColumnE
         // Wszystko w porządku - zmień wartość w wierszu
         switch (col) {
             case ColumnEdit::NODE:
-                data[row[modelColumns.id]].node = value;
+                if (this->arthm == Arthmetic::FLOAT_POINT)  data[row[modelColumns.id]].node  = value;
+                else                                        data[row[modelColumns.id]].nodeI = valueInterval;
                 row[modelColumns.node] = text;
                 break;
             case ColumnEdit::VALUE:
-                data[row[modelColumns.id]].value = value;
+                if (this->arthm == Arthmetic::FLOAT_POINT)  data[row[modelColumns.id]].value  = value;
+                else                                        data[row[modelColumns.id]].valueI = valueInterval;
                 row[modelColumns.value] = text;
+                break;
+            case ColumnEdit::NODE_LEFT:
+                data[row[modelColumns.id]].nodeI.a  = value;
+                row[modelColumns.nodeLeftEnd]       = text;
+                break;
+            case ColumnEdit::NODE_RIGHT:
+                data[row[modelColumns.id]].nodeI.b  = value;
+                row[modelColumns.nodeRightEnd]      = text;
+                break;
+            case ColumnEdit::VALUE_LEFT:
+                data[row[modelColumns.id]].valueI.a = value;
+                row[modelColumns.valueLeftEnd]      = text;
+                break;
+            case ColumnEdit::VALUE_RIGHT:
+                data[row[modelColumns.id]].valueI.b = value;
+                row[modelColumns.valueRightEnd]     = text;
                 break;
         }
     }
@@ -120,12 +124,15 @@ void DataManager::addRecords(Info::AddNodes const& info) {
         newKey = data.rbegin()->first + 1;
 
     switch (arthm) {
-        case Arthmetic::FLOAT_POINT: {
+        case Arthmetic::FULL_INTERV: {
             for (int i = 0, added = 0; i < info.nNodes; ++i) {
                 Info::DataRecord dr;
-                dr.node  = info.startValue + i*info.step;
-                dr.value = 0.0;
-                if (!isNodeUnique(dr.node))
+                dr.nodeI.a  = info.startValue + i*info.step;
+                dr.nodeI.b  = dr.nodeI.a + info.intervalWidth;
+                dr.valueI.a = 0.00L;
+                dr.valueI.b = 0.01L;
+
+                if (!isNodeUnique(dr.nodeI))
                     continue;
 
                 int id = newKey + added;
@@ -135,19 +142,13 @@ void DataManager::addRecords(Info::AddNodes const& info) {
             }
             break;
         }
-        case Arthmetic::HALF_INTERV: {
-            break;
-        }
-        case Arthmetic::FULL_INTERV: {
+        default: {
             for (int i = 0, added = 0; i < info.nNodes; ++i) {
                 Info::DataRecord dr;
-                dr.nodeI.a  = info.startValue + i*info.step;
-                dr.nodeI.b  = dr.nodeI.a + info.intervalWidth;
-                dr.valueI.a = 0.0;
-                dr.valueI.b = 0.1;
-
-                //if (!isNodeUnique(dr.node))
-                    //continue;
+                dr.node  = info.startValue + i*info.step;
+                dr.value = 0.0;
+                if (!isNodeUnique(dr.node))
+                    continue;
 
                 int id = newKey + added;
                 addRecordToBase(id, dr);
@@ -181,15 +182,11 @@ string DataManager::getRecordInfo(TreePath const& path) {
 
     switch (arthm) {
         case Arthmetic::FLOAT_POINT: {
-            S << showpos << "x = " << fixed << setprecision(25) << data[id].node << "\t\tf(x) = " << data[id].value;
+            S << showpos << fixed << setprecision(25) << "x = " << data[id].node << "\t\tf(x) = " << data[id].value;
             break;
         }
-        case Arthmetic::HALF_INTERV:
-            S << "Not implemented yet";
-            break;
-        case Arthmetic::FULL_INTERV:
-            S << showpos << "x = [" << fixed << setprecision(25) << data[id].nodeI.a << "; " << data[id].nodeI.b << "]\n" <<
-                            "f(x) = [" << data[id].valueI.a << "; " << data[id].valueI.b << "]";
+        default:
+            S << showpos << "x = " << data[id].nodeI.write() << "\nf(x) = " << data[id].valueI.write();
             break;
     }
     return S.str();
@@ -207,33 +204,28 @@ void DataManager::interpolation() {
 
             switch (this->algorithm) {
                 case Algorithm::LAGRANGE:
-                    r = lagrange(data, interpolPoint, status);
+                    r = lagrange<long double>(data, interpolPoint, status);
                     break;
                 case Algorithm::NEVILLE:
-                    r = neville (data, interpolPoint, status);
+                    r = neville<long double> (data, interpolPoint, status);
                     break;
             }
-            if (status == 1)
-                throw EmptyData();
-            else if (status == 2)
-                throw DuplicateNode("<brak danych>");
+            if      (status == 1)   throw EmptyData();
+            else if (status == 2)   throw DuplicateNode("<brak danych>");
 
-            factors = calcFactors(data, status);
+            factors = calcFactors<long double>(data, status);
             result.value = r;
             break;
         }
-        case Arthmetic::HALF_INTERV: {
-            break;
-        }
-        case Arthmetic::FULL_INTERV: {
+        default: {
             interval r;
 
             switch (this->algorithm) {
                 case Algorithm::LAGRANGE:
-                    r = lagrangeI(data, interval(interpolPoint), status);
+                    r = lagrange<interval>(data, interval(interpolPoint), status);
                     break;
                 case Algorithm::NEVILLE:
-                    r = nevilleI (data, interval(interpolPoint), status);
+                    r = neville<interval> (data, interval(interpolPoint), status);
                     break;
             }
             if (status == 1)
@@ -241,7 +233,7 @@ void DataManager::interpolation() {
             else if (status == 2)
                 throw DuplicateNode("<brak danych>");
 
-            // wspołczynniki wielomianu
+            factorsI = calcFactors<interval>(data, status);
             result.valueI = r;
             break;
         }
@@ -254,9 +246,7 @@ ustring DataManager::getResult() const {
         case Arthmetic::FLOAT_POINT:
             S << showpos << setprecision(25) << result.value;
             break;
-        case Arthmetic::HALF_INTERV:
-            break;
-        case Arthmetic::FULL_INTERV:
+        default:
             S << result.valueI.write();
             break;
     }
@@ -269,19 +259,17 @@ ustring DataManager::getFactors() const {
         case Arthmetic::FLOAT_POINT:
             for (int i = 0, n = factors.size(); i < n; ++i)
                 if (factors[i] != 0)
-                    S << (factors[i] > 0 && i != 0 ? "+ " : "- ")
+                    S << (factors[i] > 0 ? "+ " : "- ")
                       <<  abs(factors[i]) << "x" << "<sup>" << n-i-1 << "</sup> "
                       << ((i+1)%5 ? "" : "\n");
             break;
+        default:
+            for (int i = 0, n = factorsI.size(); i < n; ++i)
+                S << factorsI[i].write() << "x" << "<sup>" << n-i-1 << "</sup> "
+                  << (i == n-1 ? "" : "+\n");
+            break;
     }
     return S.str();
-}
-
-bool DataManager::isNodeUnique(long double node) const {
-    for (auto &x : data)
-        if (x.second.node == node)
-            return false;
-    return true;
 }
 
 void DataManager::addRecordToBase(int id, Info::DataRecord const& dr) {
@@ -293,4 +281,18 @@ void DataManager::addRecordToBase(int id, Info::DataRecord const& dr) {
     row[modelColumns.nodeRightEnd]  = to_string(dr.nodeI.b);
     row[modelColumns.valueLeftEnd]  = to_string(dr.valueI.a);
     row[modelColumns.valueRightEnd] = to_string(dr.valueI.b);
+}
+
+void DataManager::updateIntervalsFromPoints() {
+    TreeModel::Children children = dataBase->children();
+    for (auto &row : children) {
+        int id = row[modelColumns.id];
+        data[id].nodeI  = interval(data[id].node);
+        data[id].valueI = interval(data[id].value);
+
+        row[modelColumns.nodeLeftEnd]   = to_string(data[id].nodeI.a);
+        row[modelColumns.nodeRightEnd]  = to_string(data[id].nodeI.b);
+        row[modelColumns.valueLeftEnd]  = to_string(data[id].valueI.a);
+        row[modelColumns.valueRightEnd] = to_string(data[id].valueI.b);
+    }
 }

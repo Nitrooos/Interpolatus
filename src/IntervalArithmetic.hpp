@@ -34,6 +34,7 @@ class interval {
     public:
         interval();
         interval(int n);
+        interval(long double f);
         interval(long double la, long double lb);
         interval(const string &s);
 
@@ -50,6 +51,8 @@ class interval {
         interval& operator-=(const interval& y);
         interval& operator*=(const interval& y);
         interval& operator/=(const interval& y);
+
+        bool operator==(const interval& y) const;
 
         interval read(const string& s);
         string write() const;
