@@ -1,0 +1,14 @@
+j1  22.122s
+j2  12.716s
+j3  12.916s
+j4  12.673s
+j5  13.914s
+j6
+j7
+j8  12.597s
+j9
+j10 12.526s
+j   12.513s
+
+po wyczyszczeniu projektu ze zbędnych headerów i z flagą -j:
+    9.429s

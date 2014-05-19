@@ -1,0 +1,54 @@
+[indentation]
+indent_width=4
+indent_type=0
+indent_hard_tab_width=8
+detect_indent=false
+detect_indent_width=false
+indent_mode=2
+
+[project]
+name=EANproject
+base_path=/home/bartosz/Documents/EANproject/.project
+description=
+file_patterns=
+
+[long line marker]
+long_line_behaviour=1
+long_line_column=72
+
+[files]
+current_page=1
+FILE_NAME_0=604;Lua;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2F.project%2Fpremake4.lua;0;4
+FILE_NAME_1=9820;C++;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2Fsrc%2FDataManager.cpp;0;4
+FILE_NAME_2=2103;C++;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2Fsrc%2FDataManager.hpp;0;4
+FILE_NAME_3=2898;C++;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDownloads%2Finterpol.hpp;0;4
+FILE_NAME_4=0;None;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2Fshared%2Flog;0;4
+FILE_NAME_5=1939;C++;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2Fsrc%2FTypes.hpp;0;4
+FILE_NAME_6=7229;C++;0;EUTF-8;0;1;0;%2Fhome%2Fbartosz%2FDocuments%2FEANproject%2Fsrc%2FMainWindow.cpp;0;4
+
+[build-menu]
+NF_03_LB=Make Clean
+NF_03_CM=cd ../.project && make clean
+NF_03_WD=
+EX_00_LB=Execute
+EX_00_CM=../debug/Interpolatus
+EX_00_WD=
+C++FT_00_LB=_Premake
+C++FT_00_CM=cd ../.project && premake4 gmake
+C++FT_00_WD=
+filetypes=C++;
+NF_00_LB=_Make
+NF_00_CM=make
+NF_00_WD=
+C++FT_01_LB=Build
+C++FT_01_CM=cd ../.project && make -j
+C++FT_01_WD=
+
+[file_prefs]
+final_new_line=true
+ensure_convert_new_lines=false
+strip_trailing_spaces=true
+replace_tabs=true
+
+[VTE]
+last_dir=/home/bartosz/Documents/EANproject/src
